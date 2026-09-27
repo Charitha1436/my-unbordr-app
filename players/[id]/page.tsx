@@ -1,39 +1,29 @@
-'use client';
+import { prisma } from "@/lib/prisma";
+import { notFound } from "next/navigation";
+import Link from "next/link";
 
-import { useEffect, useState } from 'react';
-import Link from 'next/link';
+export const revalidate = 0;
 
-export default function PlayerDetailPage({ params }: { params: { id: string } }) {
-  const [playerData, setPlayerData] = useState(null);
-  const [aiReport, setAiReport] = useState('Generating scout assessment...');
-  const [loading, setLoading] = useState(true);
+interface PageProps {
+  params: Promise<{ id: string }>;
+}
 
-  useEffect(() => {
-    // Fetch player detail & stats
-    async function fetchData() {
-      const res = await fetch(`/api/players/${params.id}`);
-      const data = await res.json();
-      setPlayerData(data);
-      setLoading(false);
+export default async function PlayerDetailPage({ params }: PageProps) {
+  const { id } = await params;
 
-      // Trigger AI Scout endpoint
-      if (data) {
-        const scoutRes = await fetch('/api/scout', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            name: data.name,
-            position: data.position,
-            ageGroup: data.ageGroup,
-            percentile: data.rating,
-            stats: data.p90Stats
-          })
-        });
-        const scoutData = await scoutRes.json();
-        setAiReport(scoutData.summary);
-      }
-    }
-    fetchData();
-  }, [params.id]);
+  const player = await prisma.player.findUnique({
+    where: { id },
+    include: {
+      appearances: true,
+    },
+  });
 
-  if (loading) return
+  if (!player) {
+    notFound();
+  }
+
+  const totalMinutes = player.appearances.reduce((acc, curr) => acc + curr.minutesPlayed, 0);
+  const totalGoals = player.appearances.reduce((acc, curr) => acc + curr.goals, 0);
+  const totalAssists = player.appearances.reduce((acc, curr) => acc + curr.assists, 0);
+
+  return (
