@@ -27,3 +27,5 @@ export default async function PlayerDetailPage({ params }: PageProps) {
   const totalAssists = player.appearances.reduce((acc, curr) => acc + curr.assists, 0);
 
   return (
+
+    
