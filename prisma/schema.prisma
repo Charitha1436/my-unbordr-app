@@ -1,0 +1,70 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Match {
+  id          String       @id @map("id")
+  matchDate   DateTime
+  competition String
+  ageGroup    String
+  homeTeam    String
+  awayTeam    String
+  appearances Appearance[]
+}
+
+model Player {
+  id          String       @id @default(uuid())
+  name        String
+  ageGroup    String
+  position    String
+  appearances Appearance[]
+
+  @@unique([name, ageGroup])
+}
+
+model Appearance {
+  id                 String   @id @default(uuid())
+  matchId            String
+  playerId           String
+  match              Match    @relation(fields: [matchId], references: [id])
+  player             Player   @relation(fields: [playerId], references: [id])
+  
+  team               String
+  opponent           String
+  venue              String
+  goalsFor           Int
+  goalsAgainst       Int
+  position           String
+  minutesPlayed      Int
+  
+  touches            Int      @default(0)
+  passesAttempted    Int      @default(0)
+  passesCompleted    Int      @default(0)
+  progressivePasses  Int      @default(0)
+  crosses            Int      @default(0)
+  dribblesAttempted  Int      @default(0)
+  dribblesCompleted  Int      @default(0)
+  shots              Int      @default(0)
+  shotsOnTarget      Int      @default(0)
+  goals              Int      @default(0)
+  assists            Int      @default(0)
+  possessionLost     Int      @default(0)
+  
+  duelsWon           Int      @default(0)
+  duelsLost          Int      @default(0)
+  aerialDuelsWon     Int      @default(0)
+  aerialDuelsLost    Int      @default(0)
+  tackles            Int      @default(0)
+  interceptions      Int      @default(0)
+  recoveries         Int      @default(0)
+  clearances         Int      @default(0)
+  foulsCommitted     Int      @default(0)
+  foulsWon           Int      @default(0)
+  yellowCards        Int      @default(0)
+  redCards           Int      @default(0)
+}
