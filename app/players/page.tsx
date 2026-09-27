@@ -4,10 +4,24 @@ const prisma = new PrismaClient();
 export const revalidate = 0;
 
 export default async function PlayersPage() {
-  const players = await prisma.player.findMany({
-    include: { appearances: true },
-    orderBy: { name: 'asc' },
-  });
+  let players;
+  try {
+    players = await prisma.player.findMany({
+      include: { appearances: true },
+      orderBy: { name: 'asc' },
+    });
+  } catch (error) {
+    console.error('Failed to load players:', error);
+
+    return (
+      <main className="mx-auto min-h-screen max-w-5xl px-6 py-12">
+        <h1 className="text-3xl font-semibold">Players</h1>
+        <p role="alert" className="mt-6 border-t py-6 text-sm text-red-700">
+          Players could not be loaded. Check the database connection configured for this deployment.
+        </p>
+      </main>
+    );
+  }
 
   return (
     <main className="mx-auto min-h-screen max-w-5xl px-6 py-12">

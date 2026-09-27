@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { PrismaClient } from '@prisma/client';
+import { Prisma, PrismaClient } from '@prisma/client';
 import Papa from 'papaparse';
 
 const prisma = new PrismaClient();
@@ -143,7 +143,17 @@ export async function POST(request: Request) {
     return NextResponse.json({ success: true, appearancesCount, playersCount: playerIds.size });
   } catch (error) {
     console.error('Upload error:', error);
-    const message = error instanceof Error ? error.message : 'Internal server error';
-    return NextResponse.json({ error: message }, { status: 500 });
+    const databaseUnavailable =
+      error instanceof Prisma.PrismaClientInitializationError ||
+      (error instanceof Prisma.PrismaClientKnownRequestError && error.code === 'P1001');
+
+    return NextResponse.json(
+      {
+        error: databaseUnavailable
+          ? 'The database is unavailable. Check the DATABASE_URL configured for this Vercel deployment.'
+          : 'Upload failed. Check the server logs for details.',
+      },
+      { status: databaseUnavailable ? 503 : 500 },
+    );
   }
 }
